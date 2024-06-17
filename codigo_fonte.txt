@@ -1,0 +1,97 @@
+/* Bibliotecas */
+#include <Adafruit_LiquidCrystal.h>
+#include <Servo.h>
+
+Adafruit_LiquidCrystal lcd(0);
+
+Servo servo1;
+
+int potenciometroPino0 = 0;
+
+int valorDoPotenciometro = 0;
+
+float angulo = 0;
+float angulo1 = 0;
+
+/* Variáveis do sensor de temperatura */
+int tempPin = A1;
+float temperatura = 0;
+
+/* Variáveis do botão de navegação */
+int btnPin = 5;
+int estadoBotao = 0;
+
+int indiceTela = 0;
+int telas_totais = 3;
+
+const int tela_rotacoes = 0;
+const int tela_temperatura = 1;
+
+void setup (){
+  pinMode(btnPin, INPUT);
+  lcd.begin(16, 2);
+  servo1.attach(9);
+}
+
+void loop(){
+  temperatura = calcularTemperatura();
+  angulo = volante();
+  verificaBotao();
+  
+  switch(indiceTela) {
+    	case tela_rotacoes:
+        	lcd.setCursor(0, 0);
+            lcd.print("Angulo volante: ");
+  			lcd.setCursor(0,1);
+            lcd.print(String(angulo));
+      		delay(200);
+			lcd.print("            ");
+      		delay(200);
+            break;
+    	case tela_temperatura:
+            lcd.setCursor(0, 0);
+            lcd.print("Temp motor: ");
+  			lcd.setCursor(0,1);
+            lcd.print(String(temperatura) + " C");
+      		delay(200);
+			lcd.print("            ");
+      		delay(200);
+            break;
+    }
+  
+}
+
+void verificaBotao(){
+	estadoBotao = digitalRead(btnPin);
+  
+  	if(digitalRead(btnPin) == HIGH){
+    	indiceTela = (indiceTela + 1) % telas_totais;
+      	lcd.clear();
+    }
+  
+}
+
+float calcularTemperatura(){
+	temperatura = map(analogRead(tempPin), 0, 1023, -50, 450) + 1;
+	return temperatura;
+}
+
+float volante(){
+  
+  valorDoPotenciometro = analogRead(potenciometroPino0);
+  valorDoPotenciometro = map(valorDoPotenciometro, 0, 1023, 0, 180);
+  servo1.write(valorDoPotenciometro);
+  
+  angulo1 = valorDoPotenciometro;
+  
+  delay(15);
+  
+  
+  if (angulo1 < 90) {
+    return map(angulo1, 0, 90, 180, 0);
+  } else {
+    return map(angulo1, 90, 180, 0, -180);
+  }
+  
+  return angulo1;
+}
